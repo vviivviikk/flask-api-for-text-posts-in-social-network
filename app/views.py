@@ -1,4 +1,4 @@
-from app import app, USERS, models
+from app import app, USERS, models, POSTS
 from flask import request, Response
 import json
 from http import HTTPStatus
@@ -48,11 +48,11 @@ def user_create():
 
 @app.route("/users/<int:user_id>", methods=["GET"])
 def get_user(user_id):
-
     if not models.User.is_valid_user_id(user_id):
         return Response(
             f"Некорректный id пользователя: {user_id}. id должен быть в диапазоне [0, {len(USERS)})",
-            status=HTTPStatus.NOT_FOUND)
+            status=HTTPStatus.NOT_FOUND,
+        )
 
     user = USERS[user_id]
     response = Response(
@@ -70,3 +70,84 @@ def get_user(user_id):
         mimetype="application/json",
     )
     return response
+
+
+@app.route("/posts/create", methods=["POST"])
+def post_create():
+    data = request.get_json()
+    post_id = len(POSTS)
+    author_id = data["author_id"]
+    text = data["text"]
+
+    if not models.User.is_valid_user_id(author_id):
+        return Response(
+            f"Некорректный id автора:",
+            status=HTTPStatus.NOT_FOUND,
+        )
+
+    post = models.Post(post_id, author_id, text)
+    POSTS.append(post)
+    USERS[author_id].add_new_post(post_id)
+    response = Response(
+        json.dumps(
+            {
+                "id": post.post_id,
+                "author_id": post.author_id,
+                "text": post.text,
+                "reactions": post.reactions,
+            }
+        ),
+        HTTPStatus.CREATED,
+        mimetype="application/json",
+    )
+    return response
+
+
+@app.route("/posts/<int:post_id>", methods=["GET"])
+def get_post(post_id):
+    if not models.Post.is_valid_post_id(post_id):
+        return Response(
+            f"Некорректный post_id пользователя: {post_id}. post_id должен быть в диапазоне [0, {len(POSTS)})",
+            status=HTTPStatus.NOT_FOUND,
+        )
+
+    post = POSTS[post_id]
+    response = Response(
+        json.dumps(
+            {
+                "id": post.post_id,
+                "author_id": post.author_id,
+                "text": post.text,
+                "reactions": post.reactions,
+            }
+        ),
+        HTTPStatus.OK,
+        mimetype="application/json",
+    )
+    return response
+
+
+@app.route("/posts/<int:post_id>/reaction", methods=["POST"])
+def post_reaction(post_id):
+    data = request.get_json()
+    user_id = data["user_id"]
+    reaction = data["reaction"]
+
+    if not models.User.is_valid_user_id(user_id) or not models.Post.is_valid_post_id(
+        post_id
+    ):
+        return Response(
+            f"Некорректный user_id: {user_id} или post_id: {post_id}",
+            status=HTTPStatus.NOT_FOUND,
+        )
+
+    if models.Post.yourself_post_reaction(user_id, post_id):
+        return Response(
+            f"Вы не можете поставить реакцию на свой пост",
+            status=HTTPStatus.BAD_REQUEST,
+        )
+
+    USERS[user_id].total_reactions += 1
+    POSTS[post_id].reactions.append(reaction)
+
+    return Response(status=HTTPStatus.OK)
