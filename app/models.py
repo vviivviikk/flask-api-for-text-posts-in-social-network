@@ -35,6 +35,30 @@ class User:
     def add_new_post(self, post):
         self.posts.append(post)
 
+    def increase_reactions(self):
+        self.total_reactions += 1
+
+    def get_all_posts(self):
+        return self.posts
+
+    def convert_to_dict(self):
+        return {
+            "id": self.user_id,
+            "first_name": self.first_name,
+            "last_name": self.last_name,
+            "email": self.email,
+            "total_reactions": self.total_reactions,
+        }
+
+    def get_partial_user_data(self):
+        return f"{self.first_name} {self.last_name} ({self.user_id})"
+
+    def get_total_reactions(self):
+        return self.total_reactions
+
+    def __lt__(self, other):
+        return self.total_reactions < other.total_reactions
+
 
 class Post:
     def __init__(self, post_id, author_id, text, reactions=None):
@@ -53,3 +77,14 @@ class Post:
     @staticmethod
     def yourself_post_reaction(user_id, post_id):
         return user_id == POSTS[post_id].author_id
+
+    def get_reactions_count(self):
+        return len(self.reactions)
+
+    def convert_to_dict(self):
+        return {
+            "post_id": self.post_id,
+            "author_id": self.author_id,
+            "text": self.text,
+            "reactions": self.reactions,
+        }
