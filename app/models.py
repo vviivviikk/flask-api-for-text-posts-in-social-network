@@ -1,19 +1,52 @@
 import re
-from app import USERS, POSTS
+from app import USERS, POSTS, ALLOWED_REACTIONS
 
 
 class User:
+    user_counter = 0
+
     def __init__(
         self, user_id, first_name, last_name, email, total_reactions=0, posts=None
     ):
         if posts is None:
             posts = []
-        self.user_id = user_id
+        self.user_id = User.user_counter
+        User.user_counter += 1
         self.first_name = first_name
         self.last_name = last_name
         self.email = email
         self.total_reactions = total_reactions
         self.posts = posts
+
+    @staticmethod
+    def is_valid_name(first_name, last_name):
+        if not isinstance(first_name, str) or not isinstance(last_name, str):
+            return False
+
+        has_digits = any(char.isdigit() for char in first_name) or any(
+            char.isdigit() for char in last_name
+        )
+        is_latin_first = any(
+            char.isalpha() and not char.isdigit() and ord(char) < 128
+            for char in first_name
+        )
+        is_latin_last = any(
+            char.isalpha() and not char.isdigit() and ord(char) < 128
+            for char in last_name
+        )
+        is_cyrillic_first = any(
+            char.isalpha() and not char.isdigit() and ord(char) >= 128
+            for char in first_name
+        )
+        is_cyrillic_last = any(
+            char.isalpha() and not char.isdigit() and ord(char) >= 128
+            for char in last_name
+        )
+
+        return not has_digits and (
+            (is_latin_first and is_latin_last)
+            or (is_cyrillic_first and is_cyrillic_last)
+        )
 
     @staticmethod
     def is_valid_email(email):
@@ -59,15 +92,30 @@ class User:
     def __lt__(self, other):
         return self.total_reactions < other.total_reactions
 
+    def repr(self):
+        return f"user_id: {self.user_id}, first_name: {self.first_name}, last_name: {self.last_name}"
+
 
 class Post:
+    post_counter = 0
+
     def __init__(self, post_id, author_id, text, reactions=None):
         if reactions is None:
             reactions = []
-        self.post_id = post_id
+        self.post_id = Post.post_counter
+        Post.post_counter += 1
         self.author_id = author_id
         self.text = text
         self.reactions = reactions
+        self.reaction_users = {}
+
+    @staticmethod
+    def is_valid_author_id(author_id):
+        return isinstance(author_id, int)
+
+    @staticmethod
+    def is_valid_post_text(text):
+        return isinstance(text, str)
 
     @staticmethod
     def is_valid_post_id(post_id):
@@ -77,6 +125,12 @@ class Post:
     @staticmethod
     def yourself_post_reaction(user_id, post_id):
         return user_id == POSTS[post_id].author_id
+
+    @staticmethod
+    def is_valid_reaction(reaction):
+        if reaction not in ALLOWED_REACTIONS:
+            return False
+        return True
 
     def get_reactions_count(self):
         return len(self.reactions)
@@ -88,3 +142,6 @@ class Post:
             "text": self.text,
             "reactions": self.reactions,
         }
+
+    def repr(self):
+        return f"post_id: {self.post_id}, author id: {self.author_id}, text: {self.text}, reactions: {self.reactions}"

@@ -3,12 +3,18 @@ from flask import request, Response, url_for
 import json
 from http import HTTPStatus
 from operator import itemgetter
-from matplotlib import pyplot as plt
+import matplotlib
+import matplotlib.pyplot as plt
 
 
-@app.route("/")
-def index():
-    return "<h1>Hello World</h1>"
+@app.get("/")
+def init():
+    response = (
+        f"<h1>Flask project for social media platform!</h1>"
+        f"<b>USERS:</b><br><i>{'<br>'.join([user.repr() for user in USERS])}</i><br><br>"
+        f"<b>POSTS:</b><br><i>{'<br>'.join([post.repr() for post in POSTS])}</i><br>"
+    )
+    return response
 
 
 @app.route("/users/create", methods=["POST"])
@@ -18,6 +24,12 @@ def user_create():
     first_name = data["first_name"]
     last_name = data["last_name"]
     email = data["email"]
+
+    if not models.User.is_valid_name(first_name, last_name):
+        return Response(
+            f"Вы ввели некорректное имя '{first_name}' или фамилию '{last_name}'",
+            status=HTTPStatus.BAD_REQUEST,
+        )
 
     if not models.User.is_valid_email(email):
         return Response(
@@ -52,7 +64,7 @@ def user_create():
 def get_user(user_id):
     if not models.User.is_valid_user_id(user_id):
         return Response(
-            f"Некорректный id пользователя: {user_id}. id должен быть в диапазоне [0, {len(USERS)})",
+            f"Некорректный id пользователя: {user_id}, id должен быть в диапазоне [0, {len(USERS)})",
             status=HTTPStatus.NOT_FOUND,
         )
 
@@ -81,10 +93,22 @@ def post_create():
     author_id = data["author_id"]
     text = data["text"]
 
+    if not models.Post.is_valid_author_id(author_id):
+        return Response(
+            f"Некорректный id автора: {type(author_id)}, id должен быть целым числом",
+            status=HTTPStatus.BAD_REQUEST,
+        )
+
     if not models.User.is_valid_user_id(author_id):
         return Response(
-            f"Некорректный id автора:",
+            f"Некорректный id автора: {author_id}, id должен быть в диапазоне [0, {len(USERS)})",
             status=HTTPStatus.NOT_FOUND,
+        )
+
+    if not models.Post.is_valid_post_text(text):
+        return Response(
+            f"Некорректный тип текста: {type(text)}. Текст в посте должен быть строкой",
+            status=HTTPStatus.BAD_REQUEST,
         )
 
     post = models.Post(post_id, author_id, text)
@@ -109,7 +133,7 @@ def post_create():
 def get_post(post_id):
     if not models.Post.is_valid_post_id(post_id):
         return Response(
-            f"Некорректный post_id пользователя: {post_id}. post_id должен быть в диапазоне [0, {len(POSTS)})",
+            f"Некорректный post_id: {post_id}, post_id должен быть в диапазоне [0, {len(POSTS)})",
             status=HTTPStatus.NOT_FOUND,
         )
 
@@ -135,11 +159,21 @@ def post_reaction(post_id):
     user_id = data["user_id"]
     reaction = data["reaction"]
 
-    if not models.User.is_valid_user_id(user_id) or not models.Post.is_valid_post_id(
-        post_id
-    ):
+    if not models.Post.is_valid_post_id(post_id):
         return Response(
-            f"Некорректный user_id: {user_id} или post_id: {post_id}",
+            f"Некорректный post_id пользователя: {post_id}. post_id должен быть в диапазоне [0, {len(POSTS)})",
+            status=HTTPStatus.NOT_FOUND,
+        )
+
+    if not models.Post.is_valid_author_id(user_id):
+        return Response(
+            f"Некорректный тип id пользователя: {type(user_id)}. id должен быть целым числом",
+            status=HTTPStatus.BAD_REQUEST,
+        )
+
+    if not models.User.is_valid_user_id(user_id):
+        return Response(
+            f"Некорректный id автора: {user_id}, id должен быть в диапазоне [0, {len(USERS)})",
             status=HTTPStatus.NOT_FOUND,
         )
 
@@ -149,11 +183,25 @@ def post_reaction(post_id):
             status=HTTPStatus.BAD_REQUEST,
         )
 
+    if not models.Post.is_valid_reaction(reaction):
+        return Response(
+            f"Некорректная реакция, список разрешенных реакций: 'heart', 'like', 'dislike', 'boom', 'fire', 'party'",
+            status=HTTPStatus.BAD_REQUEST,
+        )
+
     user = USERS[user_id]
     post = POSTS[post_id]
 
+    if user_id in post.reaction_users and reaction in post.reaction_users[user_id]:
+        return Response(
+            f"Вы уже поставили реакцию {reaction} на этот пост",
+            status=HTTPStatus.BAD_REQUEST,
+        )
+
     user.increase_reactions()
     post.reactions.append(reaction)
+
+    post.reaction_users.setdefault(user_id, []).append(reaction)
 
     return Response(status=HTTPStatus.OK)
 
@@ -199,11 +247,17 @@ def get_leaderboard():
     data = request.get_json()
     leaderboard_type = data["type"]
 
+    if leaderboard_type not in ["list", "graph"]:
+        return Response(
+            f"Неверный тип запроса '{leaderboard_type}', допустимые типы: 'list' / 'graph'",
+            status=HTTPStatus.BAD_REQUEST,
+        )
+
     if leaderboard_type == "list":
         sort_type = data["sort"]
         if sort_type not in ["asc", "desc"]:
             return Response(
-                f"Введен неправильный тип сортировки {sort_type}, допустимые типы: asc / desc",
+                f"Введен неправильный тип сортировки '{sort_type}', допустимые типы: 'asc' / 'desc'",
                 status=HTTPStatus.BAD_REQUEST,
             )
 
@@ -216,10 +270,21 @@ def get_leaderboard():
             mimetype="application/json",
         )
 
-    if leaderboard_type == "graph":
+    elif leaderboard_type == "graph":
+        if "sort" in data:
+            return Response(
+                "Поле 'sort' в данном запросе не должно быть",
+                status=HTTPStatus.BAD_REQUEST,
+            )
+
+        matplotlib.use("Agg")
+
         user_names = [user.get_partial_user_data() for user in USERS]
         user_reactions = [user.get_total_reactions() for user in USERS]
-        plt.bar(user_names, user_reactions)
+
+        bar_color = "green"
+
+        plt.bar(user_names, user_reactions, color=bar_color)
         plt.ylabel("Реакции пользователей")
         plt.title("График пользователей по количеству реакций")
         plt.savefig("app/users_graph.png")
