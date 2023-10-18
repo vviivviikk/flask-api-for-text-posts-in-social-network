@@ -9,7 +9,7 @@ def post_create():
     try:
         if request.headers.get("Content-Type") != "application/json":
             return Response(
-                "Неверный тип контента. Тип контента должен быть application/json",
+                "Invalid content type. Content type should be application/json",
                 status=HTTPStatus.BAD_REQUEST,
             )
         data = request.get_json()
@@ -19,19 +19,19 @@ def post_create():
 
         if not models.Post.is_valid_author_id(author_id):
             return Response(
-                f"Некорректный id автора: {type(author_id)}, id должен быть целым числом",
+                f"Invalid author id: {type(author_id)}, id should be an integer",
                 status=HTTPStatus.BAD_REQUEST,
             )
 
         if not models.User.is_valid_user_id(author_id):
             return Response(
-                f"Некорректный id автора: {author_id}, id должен быть в диапазоне [0, {len(USERS)})",
+                f"Invalid author id: {author_id}, id should be in range [0, {len(USERS)})",
                 status=HTTPStatus.NOT_FOUND,
             )
 
         if not models.Post.is_valid_post_text(text):
             return Response(
-                f"Некорректный тип текста: {type(text)}. Текст в посте должен быть строкой",
+                f"Invalid text type: {type(text)}. Text in the post should be of type string",
                 status=HTTPStatus.BAD_REQUEST,
             )
 
@@ -53,7 +53,7 @@ def post_create():
         return response
     except KeyError as e:
         return Response(
-            f"Пропущен обязательный ключ во входных данных: {str(e)}",
+            f"Missing required key in input data: {str(e)}",
             status=HTTPStatus.BAD_REQUEST,
         )
 
@@ -62,7 +62,7 @@ def post_create():
 def get_post(post_id):
     if not str(post_id).isdigit():
         return Response(
-            f"Некорректный post_id: '{post_id}', post_id должен быть числом",
+            f"Invalid post_id: '{post_id}', post_id should be an integer",
             status=HTTPStatus.BAD_REQUEST,
         )
 
@@ -70,7 +70,7 @@ def get_post(post_id):
 
     if not models.Post.is_valid_post_id(post_id):
         return Response(
-            f"Некорректный post_id: {post_id}, post_id должен быть в диапазоне [0, {len(POSTS)})",
+            f"Invalid post_id: {post_id}, post_id should be in range [0, {len(POSTS)})",
             status=HTTPStatus.NOT_FOUND,
         )
 
@@ -94,7 +94,7 @@ def get_post(post_id):
 def post_reaction(post_id):
     if not str(post_id).isdigit():
         return Response(
-            f"Некорректный post_id: '{post_id}', post_id должен быть числом",
+            f"Invalid post_id: '{post_id}', post_id should be an integer",
             status=HTTPStatus.BAD_REQUEST,
         )
 
@@ -103,7 +103,7 @@ def post_reaction(post_id):
     try:
         if request.headers.get("Content-Type") != "application/json":
             return Response(
-                "Неверный тип контента. Тип контента должен быть application/json",
+                "Invalid content type. Content type should be application/json",
                 status=HTTPStatus.BAD_REQUEST,
             )
         data = request.get_json()
@@ -112,31 +112,31 @@ def post_reaction(post_id):
 
         if not models.Post.is_valid_post_id(post_id):
             return Response(
-                f"Некорректный post_id пользователя: {post_id}. post_id должен быть в диапазоне [0, {len(POSTS)})",
+                f"Invalid user post_id: {post_id}. post_id should be in range [0, {len(POSTS)})",
                 status=HTTPStatus.NOT_FOUND,
             )
 
         if not models.Post.is_valid_author_id(user_id):
             return Response(
-                f"Некорректный тип id пользователя: {type(user_id)}. id должен быть целым числом",
+                f"Invalid user id type: {type(user_id)}. id should be an integer",
                 status=HTTPStatus.BAD_REQUEST,
             )
 
         if not models.User.is_valid_user_id(user_id):
             return Response(
-                f"Некорректный id автора: {user_id}, id должен быть в диапазоне [0, {len(USERS)})",
+                f"Invalid author id: {user_id}, id should be in range [0, {len(USERS)})",
                 status=HTTPStatus.NOT_FOUND,
             )
 
         if models.Post.yourself_post_reaction(user_id, post_id):
             return Response(
-                f"Вы не можете поставить реакцию на свой пост",
+                f"You cannot react to your own post",
                 status=HTTPStatus.BAD_REQUEST,
             )
 
         if not models.Post.is_valid_reaction(reaction):
             return Response(
-                f"Некорректная реакция, список разрешенных реакций: 'heart', 'like', 'dislike', 'boom', 'fire', 'party'",
+                f"Invalid reaction, allowed reactions: 'heart', 'like', 'dislike', 'boom', 'fire', 'party'",
                 status=HTTPStatus.BAD_REQUEST,
             )
 
@@ -145,7 +145,7 @@ def post_reaction(post_id):
 
         if user_id in post.reaction_users and reaction in post.reaction_users[user_id]:
             return Response(
-                f"Вы уже поставили реакцию {reaction} на этот пост",
+                f"You have already reacted with {reaction} to this post",
                 status=HTTPStatus.BAD_REQUEST,
             )
 
@@ -157,6 +157,6 @@ def post_reaction(post_id):
         return Response(status=HTTPStatus.OK)
     except KeyError as e:
         return Response(
-            f"Пропущен обязательный ключ во входных данных: {str(e)}",
+            f"Missing required key in input data: {str(e)}",
             status=HTTPStatus.BAD_REQUEST,
         )

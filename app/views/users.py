@@ -12,7 +12,7 @@ def user_create():
     try:
         if request.headers.get("Content-Type") != "application/json":
             return Response(
-                "Неверный тип контента. Тип контента должен быть application/json",
+                "Invalid content type. Content type should be application/json",
                 status=HTTPStatus.BAD_REQUEST,
             )
 
@@ -24,17 +24,18 @@ def user_create():
 
         if not models.User.is_valid_name(first_name, last_name):
             return Response(
-                f"Вы ввели некорректное имя '{first_name}' или фамилию '{last_name}'",
+                f"You entered an invalid name '{first_name}' or last name '{last_name}'",
                 status=HTTPStatus.BAD_REQUEST,
             )
 
         if not models.User.is_valid_email(email):
             return Response(
-                f"Вы ввели некорректный email: '{email}'", status=HTTPStatus.BAD_REQUEST
+                f"You entered an invalid email: '{email}'",
+                status=HTTPStatus.BAD_REQUEST,
             )
         if not models.User.is_unique_email(email):
             return Response(
-                f"email '{email}' уже используется другим пользователем",
+                f"Email '{email}' is already used by another user",
                 status=HTTPStatus.BAD_REQUEST,
             )
 
@@ -57,7 +58,7 @@ def user_create():
         return response
     except KeyError as e:
         return Response(
-            f"Пропущен обязательный ключ во входных данных: {str(e)}",
+            f"Missing required key in input data: {str(e)}",
             status=HTTPStatus.BAD_REQUEST,
         )
 
@@ -66,7 +67,7 @@ def user_create():
 def get_user(user_id):
     if not str(user_id).isdigit():
         return Response(
-            f"Некорректный id пользователя: {user_id}, id должен быть числом",
+            f"Invalid user_id: {user_id}, user_id should be an integer",
             status=HTTPStatus.BAD_REQUEST,
         )
 
@@ -74,7 +75,7 @@ def get_user(user_id):
 
     if not models.User.is_valid_user_id(user_id):
         return Response(
-            f"Некорректный id пользователя: {user_id}, id должен быть в диапазоне [0, {len(USERS)})",
+            f"Invalid user_id: {user_id}, user_id should be in range [0, {len(USERS)})",
             status=HTTPStatus.NOT_FOUND,
         )
 
@@ -100,7 +101,7 @@ def get_user(user_id):
 def get_all_posts(user_id):
     if not str(user_id).isdigit():
         return Response(
-            f"Некорректный id пользователя: {user_id}, id должен быть числом",
+            f"Invalid user_id: {user_id}, user_id should be an integer",
             status=HTTPStatus.BAD_REQUEST,
         )
 
@@ -109,7 +110,7 @@ def get_all_posts(user_id):
     try:
         if request.headers.get("Content-Type") != "application/json":
             return Response(
-                "Неверный тип контента. Тип контента должен быть application/json",
+                "Invalid content type. Content type should be application/json",
                 status=HTTPStatus.BAD_REQUEST,
             )
         data = request.get_json()
@@ -117,7 +118,7 @@ def get_all_posts(user_id):
 
         if not models.User.is_valid_user_id(user_id):
             return Response(
-                f"Некорректный id пользователя: {user_id}. id должен быть в диапазоне [0, {len(USERS)})",
+                f"Invalid user_id: {user_id}. user_id should be in range [0, {len(USERS)})",
                 status=HTTPStatus.NOT_FOUND,
             )
 
@@ -134,7 +135,7 @@ def get_all_posts(user_id):
             )
         else:
             return Response(
-                f"Введен неправильный тип сортировки {sort_type}, допустимые типы: asc / desc",
+                f"Invalid sort type {sort_type}, allowed types: 'asc' or 'desc'",
                 status=HTTPStatus.BAD_REQUEST,
             )
 
@@ -148,7 +149,7 @@ def get_all_posts(user_id):
         return response
     except KeyError as e:
         return Response(
-            f"Пропущен обязательный ключ во входных данных: {str(e)}",
+            f"Missing required key in input data: {str(e)}",
             status=HTTPStatus.BAD_REQUEST,
         )
 
@@ -158,7 +159,7 @@ def get_leaderboard():
     try:
         if request.headers.get("Content-Type") != "application/json":
             return Response(
-                "Неверный тип контента. Тип контента должен быть application/json",
+                "Invalid content type. Content type should be application/json",
                 status=HTTPStatus.BAD_REQUEST,
             )
         data = request.get_json()
@@ -166,7 +167,7 @@ def get_leaderboard():
 
         if leaderboard_type not in ["list", "graph"]:
             return Response(
-                f"Неверный тип запроса '{leaderboard_type}', допустимые типы: 'list' / 'graph'",
+                f"Invalid leaderboard type '{leaderboard_type}', allowed types: 'list' or 'graph'",
                 status=HTTPStatus.BAD_REQUEST,
             )
 
@@ -174,7 +175,7 @@ def get_leaderboard():
             sort_type = data["sort"]
             if sort_type not in ["asc", "desc"]:
                 return Response(
-                    f"Введен неправильный тип сортировки '{sort_type}', допустимые типы: 'asc' / 'desc'",
+                    f"Invalid sort type '{sort_type}', allowed types: 'asc' or 'desc'",
                     status=HTTPStatus.BAD_REQUEST,
                 )
 
@@ -190,7 +191,7 @@ def get_leaderboard():
         elif leaderboard_type == "graph":
             if "sort" in data:
                 return Response(
-                    "Поле 'sort' в данном запросе не должно быть",
+                    "Field 'sort' should not be present in this request",
                     status=HTTPStatus.BAD_REQUEST,
                 )
 
@@ -202,9 +203,9 @@ def get_leaderboard():
             bar_color = "green"
 
             plt.bar(user_names, user_reactions, color=bar_color)
-            plt.ylabel("Кол-во реакций пользователя")
-            plt.xlabel("Имя, фамилия, id пользователя")
-            plt.title("Столбчатый график пользователей по количеству реакций")
+            plt.ylabel("Number of user reactions")
+            plt.xlabel("User name, last name, id")
+            plt.title("Bar chart of users by number of reactions")
             plt.savefig("app/static/leaderboard.png")
 
             return Response(
@@ -214,6 +215,6 @@ def get_leaderboard():
             )
     except KeyError as e:
         return Response(
-            f"Пропущен обязательный ключ во входных данных: {str(e)}",
+            f"Missing required key in input data: {str(e)}",
             status=HTTPStatus.BAD_REQUEST,
         )

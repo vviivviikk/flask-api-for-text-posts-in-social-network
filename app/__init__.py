@@ -1,17 +1,9 @@
 from flask import Flask
 
-app = Flask(__name__)  # name __init__
+app = Flask(__name__)
 
-USERS = []  # list objects of type User
-POSTS = []  # list objects of type Post
-ALLOWED_REACTIONS = [
-    "heart",
-    "like",
-    "dislike",
-    "boom",
-    "fire",
-    "party",
-]  # list allowed reaction for post
+USERS = []
+POSTS = []
 
 from app import views_all
 from app import models

@@ -20,9 +20,9 @@ def init():
     bar_color = "green"
 
     plt.bar(user_names, user_reactions, color=bar_color)
-    plt.ylabel("Кол-во реакций пользователя")
-    plt.xlabel("Имя, фамилия, id пользователя")
-    plt.title("Столбчатый график пользователей по количеству реакций")
+    plt.ylabel("Number of user reactions")
+    plt.xlabel("User name, last name, id")
+    plt.title("Bar chart of users by number of reactions")
     plt.savefig(os.path.join("app", "static", "leaderboard.png"))
 
     response += f'<img src="{url_for("static", filename="leaderboard.png")}">'

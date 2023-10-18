@@ -1,36 +1,36 @@
 # Flask project for social media platform
 
-Требуется создать полноценный сервис, который выполняет следующие функции:
+A full-fledged service needs to be created that performs the following functions:
 
-+ Создает пользователя (проверяет почту на правильность), который может писать посты, ставить реакции (heart, like, dislike, boom, ...) на посты других пользователей
-+ Выдает данные по конкретному пользователю
-+ Создает пост
-+ Выдает данные по конкретному посту
-+ Пользователь ставит реакцию на пост
-+ Выдает все посты пользователя, отсортированные по количеству реакций
-+ Генерирует список пользователей, отсортированный по количеству реакций
-+ Генерирует график пользователей по количеству реакций
++ Creates a user (checks the email for correctness) who can write posts and react (heart, like, dislike, boom, ...) to posts from other users
++ Provides data on a specific user
++ Creates a post
++ Provides data on a specific post
++ User reacts to a post
++ Provides all posts of a user, sorted by the number of reactions
++ Generates a list of users sorted by the number of reactions
++ Generates a graph of users based on the number of reactions
 
-Допущения:
+Assumptions:
 
-- Объекты допустимо хранить в runtime
-- Валидацию правильности почты можно сделать через регулярные выражения, сторонние библиотеки
+- Objects are allowed to be stored in runtime
+- Email validation can be done through regular expressions, third-party libraries
 
-Необходимо:
+Required:
 
-- Код должен быть отформатирован (например, при помощи black)
-- Обработать все частные случаи (пользователя не существует, пользователь с такой почтой уже зарегистрирован и т. д.)
+- Code must be properly formatted (e.g., using black)
+- Handle all edge cases (user does not exist, user with such email is already registered, etc.)
 
-# Запросы и ответы
+# Requests and responses
 
-- Создание пользователя `POST /users/create`
+- Create a user `POST /users/create`
 
 Request example:
 ```json
 {
   "first_name": "string",
   "last_name": "string",
-  "email": "string",
+  "email": "string"
 }
 ```
 
@@ -41,12 +41,12 @@ Response example:
   "first_name": "string",
   "last_name": "string",
   "email": "string",
-  "total_reactions": "number"
+  "total_reactions": "number",
   "posts": []
 }
 ```
 
-- Получение данных по определенному пользователю `GET /users/<user_id>`
+- Get data on a specific user `GET /users/<user_id>`
 
 Response example:
 ```json
@@ -63,13 +63,13 @@ Response example:
 }
 ```
 
-- Создание поста `POST /posts/create`
+- Create a post `POST /posts/create`
 
 Request example:
 ```json
 {
   "author_id": "number",
-  "text": "string",
+  "text": "string"
 }
 ```
 
@@ -86,7 +86,7 @@ Response example:
 }
 ```
 
-- Получение данных по определенному посту `GET /posts/<post_id>`
+- Get data on a specific post `GET /posts/<post_id>`
 
 Response example:
 ```json
@@ -101,7 +101,7 @@ Response example:
 }
 ```
 
-- Поставить реакцию посту `POST /posts/<post_id>/reaction`
+- React to a post `POST /posts/<post_id>/reaction`
 
 Request example:
 ```json
@@ -111,11 +111,11 @@ Request example:
 }
 ```
 
-Response example: (пусто, только код ответа)
+Response example: (Empty, only response code)
 
-- Получение всех постов пользователя, отсортированных по количеству реакций `GET /users/<user_id>/posts`
+- Get all posts of a user, sorted by the number of reactions `GET /users/<user_id>/posts`
 
-Значение `asc` обозначет `ascending` (по возрастанию), параметр `desc` обозначет `descending` (по убыванию)
+The value `asc` denotes `ascending`, the `desc` parameter denotes `descending`
 
 Request example:
 ```json
@@ -144,9 +144,9 @@ Response example:
 }
 ```
 
-- Получение всех пользователей, отсортированных по количеству реакций `GET /users/leaderboard`
+- Get all users, sorted by the number of reactions `GET /users/leaderboard`
 
-Значение `asc` обозначет `ascending` (по возрастанию), параметр `desc` обозначет `descending` (по убыванию)
+The value `asc` denotes `ascending`, the `desc` parameter denotes `descending`
 
 Request example:
 ```json
@@ -174,12 +174,12 @@ Response example:
 }
 ```
 
-- Получение графика пользователей по количеству реакций `GET /users/leaderboard`
+- Get a graph of users based on the number of reactions `GET /users/leaderboard`
 
 Request example:
 ```json
 {
-  "type": "graph",
+  "type": "graph"
 }
 ```
 

@@ -1,5 +1,6 @@
 import re
-from app import USERS, POSTS, ALLOWED_REACTIONS
+from app import USERS, POSTS
+from enum import Enum
 
 
 class User:
@@ -128,7 +129,9 @@ class Post:
 
     @staticmethod
     def is_valid_reaction(reaction):
-        if reaction not in ALLOWED_REACTIONS:
+        if reaction not in [
+            reaction.value for reaction in Reaction.__members__.values()
+        ]:
             return False
         return True
 
@@ -145,3 +148,12 @@ class Post:
 
     def repr(self):
         return f"post_id: {self.post_id}, author id: {self.author_id}, text: {self.text}, reactions: {self.reactions}"
+
+
+class Reaction(Enum):
+    HEART = "heart"
+    LIKE = "like"
+    DISLIKE = "dislike"
+    BOOM = "boom"
+    FIRE = "fire"
+    PARTY = "party"

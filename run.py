@@ -1,4 +1,4 @@
 from app import app
 
-if __name__ == "__main__":  # True, we are run this file
+if __name__ == "__main__":
     app.run()
