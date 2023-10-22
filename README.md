@@ -1,6 +1,8 @@
-# Flask project for social media platform
+# Flask API for social network platform
 
-A full-fledged service needs to be created that performs the following functions:
+Please review the requirements.txt file before running the API.
+
+Functions:
 
 + Creates a user (checks the email for correctness) who can write posts and react (heart, like, dislike, boom, ...) to posts from other users
 + Provides data on a specific user
